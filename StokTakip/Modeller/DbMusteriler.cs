@@ -10,9 +10,13 @@ namespace StokTakip.Modeller
     {
         public int MusteriId { get; set; }
         public string FirmaAdi { get; set; }
-        public string? YetkiliAdSoyad { get; set; }
-        public string? Telefon { get; set; }
-        public string? Mail { get; set; }
-        public string? Adres { get; set; }
+        public string YetkiliAdSoyad { get; set; }
+        public string Telefon { get; set; }
+        public string Mail { get; set; }
+        public string Adres { get; set; }
+
+        // Navigation Property
+        public ICollection<DbStokCikis> StokCikislar { get; set; }
+
     }
 }

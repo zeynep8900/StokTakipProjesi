@@ -8,11 +8,14 @@ namespace StokTakip.Modeller
 {
     public class DbTedarikciler
     {
-        public int TeadarikciId { get; set; }
+        public int TedarikciId { get; set; }
         public string FirmaAdi { get; set; }
-        public string? YetkiliAdSoyad { get; set; }
-        public string? Telefon { get; set; }
-        public string? Mail { get; set; }
-        public string? Adres { get; set; }
+        public string YetkiliAdSoyad { get; set; }
+        public string Telefon { get; set; }
+        public string Mail { get; set; }
+        public string Adres { get; set; }
+        public ICollection<DbStokGiris> StokGirisler { get; set; }
+        public ICollection<DbStokCikis> StokCikislar { get; set; }
+
     }
 }

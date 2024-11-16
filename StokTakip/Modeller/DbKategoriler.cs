@@ -8,8 +8,10 @@ namespace StokTakip.Modeller
 {
     public class DbKategoriler
     {
-        public int KategoriId { get; set; }
+        public int KategoriId { get; set; } // Primary Key
         public string KategoriAd { get; set; }
 
+        // Navigasyon özelliği
+        public ICollection<DbUrunler> Urunler { get; set; }
     }
 }
