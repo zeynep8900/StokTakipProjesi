@@ -1,6 +1,9 @@
-﻿using StokTakip.Modeller;
+﻿using StokTakip.Db;
+using StokTakip.Modeller;
 using System;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Windows.Forms;
 
 namespace StokTakip
@@ -10,61 +13,67 @@ namespace StokTakip
         public FrmGiris()
         {
             InitializeComponent();
+
+            // Şifre alanının özelliklerini ayarla
+            txtSifre.PasswordChar = '●'; // Şifre yazarken görünmesi gereken karakter
+        }
+
+        private string HashPassword(string password)
+        {
+            using (SHA256 sha256 = SHA256.Create())
+            {
+                byte[] bytes = Encoding.UTF8.GetBytes(password);
+                byte[] hash = sha256.ComputeHash(bytes);
+                return Convert.ToBase64String(hash);
+            }
         }
 
         private void btnGiris_Click(object sender, EventArgs e)
         {
             DbKullanicilar kullanici = null;
-            Db.StokTakipContext context = new Db.StokTakipContext();
 
-            // Try to find the user based on the provided login details
-            kullanici = context.Kullanicilar.FirstOrDefault(
-                e =>
-                e.Ad == txtAd.Text &&
-                e.Soyad == txtSoyad.Text &&
-                e.KullaniciMail == txtMail.Text &&
-                e.Yetki == txtYetki.Text &&
-                e.Parola == txtSifre.Text);
+            using (StokTakipContext context = new StokTakipContext())
+            {
+                string hashedPassword = HashPassword(txtSifre.Text);
 
-            // If the user is found, login is successful
-            if (kullanici != null)
-            {
-                // Open Form1
-                Form1 form1 = new Form1();
-                form1.Show();
-                this.Close();
-            }
-            else
-            {
-                // If user is not found, treat it as a registration
-                if (MessageBox.Show("Kullanıcı bulunamadı. Kayıt olmak ister misiniz?", "Kayıt", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                kullanici = context.Kullanicilar.FirstOrDefault(
+                    e =>
+                    e.Ad == txtAd.Text &&
+                    e.Soyad == txtSoyad.Text &&
+                    e.Yetki == txtYetki.Text &&
+                    e.KullaniciMail == txtMail.Text &&
+                    e.Parola == hashedPassword
+                );
+
+                if (kullanici != null)
                 {
-                    // Create a new user object and save to the database
-                    DbKullanicilar yeniKullanici = new DbKullanicilar()
-                    {
-                        Ad = txtAd.Text,
-                        Soyad = txtSoyad.Text,
-                        KullaniciMail = txtMail.Text,
-                        Yetki = txtYetki.Text,
-                        Parola = txtSifre.Text
-                    };
-
-                    // Add the new user to the database
-                    context.Kullanicilar.Add(yeniKullanici);
-                    context.SaveChanges();
-
-                    // Inform the user that registration was successful
-                    MessageBox.Show("Kayıt başarılı! Giriş yapabilirsiniz.", "Kayıt", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                    // After registration, you can proceed with the login process
                     Form1 form1 = new Form1();
                     form1.Show();
                     this.Close();
                 }
                 else
                 {
-                    // If the user does not want to register, show an error
-                    MessageBox.Show("Lütfen geçerli bir kullanıcı adı ve şifre giriniz.", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    if (MessageBox.Show("Kullanıcı bulunamadı. Kayıt olmak ister misiniz?", "Kayıt", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                    {
+                        DbKullanicilar yeniKullanici = new DbKullanicilar()
+                        {
+                            Ad = txtAd.Text,
+                            Soyad = txtSoyad.Text,
+                            KullaniciMail = txtMail.Text,
+                            Yetki = txtYetki.Text,
+                            Parola = hashedPassword
+                        };
+
+                        context.Kullanicilar.Add(yeniKullanici);
+                        context.SaveChanges();
+
+                        MessageBox.Show("Kayıt başarılı! Giriş yapabilirsiniz.", "Kayıt", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        DialogResult = DialogResult.OK;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Lütfen geçerli bir kullanıcı adı ve şifre giriniz.", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
             }
         }
